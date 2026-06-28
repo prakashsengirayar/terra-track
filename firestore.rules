@@ -1,0 +1,64 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /vehicles/{vehicleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /workEntries/{entryId} {
+      allow read, write: if true;
+    }
+    match /adminEntries/{entryId} {
+      allow read, write: if true;
+    }
+    match /messages/{msgId} {
+      allow read, write: if true;
+    }
+    match /natives/{nativeId} {
+      allow read, write: if true;
+    }
+
+    // ===================================================================
+    // Agri module (Land / Worker / Work-Entry / Expense / Harvest).
+    // Additive — does not modify any rule above. Every document carries an
+    // `ownerId` field set server-side-equivalent (the repository forces it
+    // to FirebaseAuth.instance.currentUser!.uid on every write), and every
+    // rule below enforces that the requesting user can only read or write
+    // documents they own.
+    // ===================================================================
+    match /lands/{landId} {
+      allow read, update, delete: if request.auth != null
+          && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    match /workers/{workerId} {
+      allow read, update, delete: if request.auth != null
+          && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    match /agriWorkEntries/{entryId} {
+      allow read, update, delete: if request.auth != null
+          && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    match /expenses/{expenseId} {
+      allow read, update, delete: if request.auth != null
+          && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    match /harvests/{harvestId} {
+      allow read, update, delete: if request.auth != null
+          && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.ownerId;
+    }
+  }
+}

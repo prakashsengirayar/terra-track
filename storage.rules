@@ -1,0 +1,39 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // ===================================================================
+    // Agri module (Land / Worker / Work-Entry / Expense / Harvest photos
+    // and receipts). Scoped to signed-in users only. Declared above the
+    // catch-all below because Cloud Storage Security Rules OR together
+    // every `allow` expression that matches a given path — see the
+    // catch-all's comment for why it carries an `agri/` exclusion.
+    // ===================================================================
+    match /agri/land_photos/{fileName} {
+      allow read, write: if request.auth != null;
+    }
+    match /agri/worker_photos/{fileName} {
+      allow read, write: if request.auth != null;
+    }
+    match /agri/work_entry_photos/{fileName} {
+      allow read, write: if request.auth != null;
+    }
+    match /agri/expense_receipts/{fileName} {
+      allow read, write: if request.auth != null;
+    }
+    match /agri/harvest_photos/{fileName} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Pre-existing catch-all for every other (non-agri) path — unchanged
+    // in effect for every path it originally covered (the `agri/`
+    // exclusion only ever evaluates to false for paths that did not exist
+    // before this module was added, so no previously-working path is
+    // affected). The exclusion is required because Storage Security Rules
+    // OR together every matching `allow` expression: without it, this
+    // unconditional rule would also grant unrestricted access to the
+    // scoped agri/** paths above, defeating the rules they declare.
+    match /{allPaths=**} {
+      allow read, write: if !allPaths.matches('^agri/.*');
+    }
+  }
+}
