@@ -3,6 +3,7 @@ import 'package:equatable/equatable.dart';
 // --- Vehicle entity ---
 class VehicleEntity extends Equatable {
   final String id;
+  final String vehicleNumber;
   final String vehicleName;
   final String driverName;
   final bool isActive;
@@ -10,6 +11,7 @@ class VehicleEntity extends Equatable {
 
   const VehicleEntity({
     required this.id,
+    required this.vehicleNumber,
     required this.vehicleName,
     required this.driverName,
     required this.isActive,
@@ -17,7 +19,7 @@ class VehicleEntity extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, vehicleName, driverName, isActive];
+  List<Object?> get props => [id, vehicleNumber, vehicleName, driverName, isActive];
 }
 
 // --- WorkEntry entity ---

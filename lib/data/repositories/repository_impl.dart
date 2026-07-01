@@ -15,9 +15,9 @@ class VehicleRepositoryImpl implements VehicleRepository {
 
   @override
   Future<Either<Failure, VehicleEntity>> verifyVehicle(
-      String vehicleName) async {
+      String vehicleNumber) async {
     try {
-      final vehicle = await _remote.verifyVehicle(vehicleName);
+      final vehicle = await _remote.verifyVehicle(vehicleNumber);
       if (vehicle == null) return const Left(NotFoundFailure('Vehicle not found'));
       return Right(vehicle);
     } on ServerException catch (e) {
@@ -43,6 +43,48 @@ class VehicleRepositoryImpl implements VehicleRepository {
       final v = await _remote.getVehicleById(id);
       if (v == null) return const Left(NotFoundFailure());
       return Right(v);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<VehicleEntity>>> getAllVehiclesIncludingInactive() async {
+    try {
+      final list = await _remote.getAllVehiclesIncludingInactive();
+      return Right(list);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VehicleEntity>> createVehicle(VehicleEntity vehicle) async {
+    try {
+      final model = VehicleModel.fromEntity(vehicle);
+      final result = await _remote.createVehicle(model);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VehicleEntity>> updateVehicle(VehicleEntity vehicle) async {
+    try {
+      final model = VehicleModel.fromEntity(vehicle);
+      final result = await _remote.updateVehicle(model);
+      return Right(result);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> deleteVehicle(String id) async {
+    try {
+      final result = await _remote.deleteVehicle(id);
+      return Right(result);
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -215,6 +257,7 @@ class AdminRepositoryImpl implements AdminRepository {
           (v) => v.vehicleName == m['vehicleName'],
           orElse: () => VehicleModel(
             id: '',
+            vehicleNumber: '',
             vehicleName: m['vehicleName'] as String,
             driverName: '',
             isActive: true,

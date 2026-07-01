@@ -9,8 +9,8 @@ class VerifyVehicleUseCase {
   final VehicleRepository repository;
   VerifyVehicleUseCase(this.repository);
 
-  Future<Either<Failure, VehicleEntity>> call(String vehicleName) =>
-      repository.verifyVehicle(vehicleName);
+  Future<Either<Failure, VehicleEntity>> call(String vehicleNumber) =>
+      repository.verifyVehicle(vehicleNumber);
 }
 
 class SaveSessionUseCase {
@@ -143,4 +143,36 @@ class GetAllVehiclesUseCase {
 
   Future<Either<Failure, List<VehicleEntity>>> call() =>
       repository.getAllVehicles();
+}
+
+class GetAllVehiclesIncludingInactiveUseCase {
+  final VehicleRepository repository;
+  GetAllVehiclesIncludingInactiveUseCase(this.repository);
+
+  Future<Either<Failure, List<VehicleEntity>>> call() =>
+      repository.getAllVehiclesIncludingInactive();
+}
+
+class CreateVehicleUseCase {
+  final VehicleRepository repository;
+  CreateVehicleUseCase(this.repository);
+
+  Future<Either<Failure, VehicleEntity>> call(VehicleEntity vehicle) =>
+      repository.createVehicle(vehicle);
+}
+
+class UpdateVehicleUseCase {
+  final VehicleRepository repository;
+  UpdateVehicleUseCase(this.repository);
+
+  Future<Either<Failure, VehicleEntity>> call(VehicleEntity vehicle) =>
+      repository.updateVehicle(vehicle);
+}
+
+class DeleteVehicleUseCase {
+  final VehicleRepository repository;
+  DeleteVehicleUseCase(this.repository);
+
+  Future<Either<Failure, bool>> call(String id) =>
+      repository.deleteVehicle(id);
 }

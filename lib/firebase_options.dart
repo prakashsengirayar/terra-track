@@ -1,6 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────────────
-// PLACEHOLDER — Replace by running: flutterfire configure
-// ─────────────────────────────────────────────────────────────────────────────
+// Generated via `flutterfire configure --project=agri-billing` for
+// android/web. iOS is not yet configured (no Xcode project scaffolded).
 // ignore_for_file: lines_longer_than_80_chars
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
@@ -16,24 +15,23 @@ class DefaultFirebaseOptions {
     }
   }
 
-  // TODO: Replace with values from `flutterfire configure`
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',
-    appId: 'YOUR_WEB_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyCdyS8i5GQYW5lFRHvrCuUI8EikQHsjNE4',
+    appId: '1:766010886310:web:391a895069e5abaab80c67',
+    messagingSenderId: '766010886310',
+    projectId: 'agri-billing',
+    authDomain: 'agri-billing.firebaseapp.com',
+    storageBucket: 'agri-billing.firebasestorage.app',
+    measurementId: 'G-SL9J23FMFR',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',
-    appId: 'YOUR_ANDROID_APP_ID',
-    messagingSenderId: 'YOUR_SENDER_ID',
-    projectId: 'YOUR_PROJECT_ID',
-    storageBucket: 'YOUR_PROJECT_ID.appspot.com',
+    apiKey: 'AIzaSyAmR6T_kr8WFTdpcVjhGFAlQsJq6RpNe70',
+    appId: '1:766010886310:android:4250363719eb52deb80c67',
+    messagingSenderId: '766010886310',
+    projectId: 'agri-billing',
+    storageBucket: 'agri-billing.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'YOUR_IOS_API_KEY',
     appId: 'YOUR_IOS_APP_ID',

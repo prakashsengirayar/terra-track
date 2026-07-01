@@ -7,9 +7,13 @@ import '../../../core/constants/app_constants.dart';
 import '../../models/models.dart';
 
 abstract class RemoteDataSource {
-  Future<VehicleModel?> verifyVehicle(String vehicleName);
+  Future<VehicleModel?> verifyVehicle(String vehicleNumber);
   Future<List<VehicleModel>> getAllVehicles();
+  Future<List<VehicleModel>> getAllVehiclesIncludingInactive();
   Future<VehicleModel?> getVehicleById(String id);
+  Future<VehicleModel> createVehicle(VehicleModel vehicle);
+  Future<VehicleModel> updateVehicle(VehicleModel vehicle);
+  Future<bool> deleteVehicle(String id);
   Future<WorkEntryModel> createWorkEntry(WorkEntryModel entry);
   Future<WorkEntryModel> updateWorkEntry(WorkEntryModel entry);
   Future<List<WorkEntryModel>> getEntriesByVehicle(
@@ -50,14 +54,15 @@ class FirestoreRemoteDataSource implements RemoteDataSource {
       _firestore.collection(AppConstants.messagesCollection);
 
   @override
-  Future<VehicleModel?> verifyVehicle(String vehicleName) async {
-    final snap = await _vehicles
-        .where('vehicleName', isEqualTo: vehicleName.trim())
-        .where('isActive', isEqualTo: true)
-        .limit(1)
-        .get();
-    if (snap.docs.isEmpty) return null;
-    return VehicleModel.fromFirestore(snap.docs.first);
+  Future<VehicleModel?> verifyVehicle(String vehicleNumber) async {
+    final target = vehicleNumber.trim().toLowerCase();
+    final snap = await _vehicles.where('isActive', isEqualTo: true).get();
+    for (final doc in snap.docs) {
+      final data = doc.data() as Map<String, dynamic>;
+      final number = (data['vehicleNumber'] as String? ?? '').trim().toLowerCase();
+      if (number == target) return VehicleModel.fromFirestore(doc);
+    }
+    return null;
   }
 
   @override
@@ -74,6 +79,39 @@ class FirestoreRemoteDataSource implements RemoteDataSource {
     final doc = await _vehicles.doc(id).get();
     if (!doc.exists) return null;
     return VehicleModel.fromFirestore(doc);
+  }
+
+  @override
+  Future<List<VehicleModel>> getAllVehiclesIncludingInactive() async {
+    final snap = await _vehicles.orderBy('vehicleName').get();
+    return snap.docs.map((d) => VehicleModel.fromFirestore(d)).toList();
+  }
+
+  @override
+  Future<VehicleModel> createVehicle(VehicleModel vehicle) async {
+    final id = _uuid.v4();
+    final model = VehicleModel(
+      id: id,
+      vehicleNumber: vehicle.vehicleNumber,
+      vehicleName: vehicle.vehicleName,
+      driverName: vehicle.driverName,
+      isActive: vehicle.isActive,
+      createdAt: DateTime.now(),
+    );
+    await _vehicles.doc(id).set(model.toFirestore());
+    return model;
+  }
+
+  @override
+  Future<VehicleModel> updateVehicle(VehicleModel vehicle) async {
+    await _vehicles.doc(vehicle.id).update(vehicle.toFirestore());
+    return vehicle;
+  }
+
+  @override
+  Future<bool> deleteVehicle(String id) async {
+    await _vehicles.doc(id).delete();
+    return true;
   }
 
   @override

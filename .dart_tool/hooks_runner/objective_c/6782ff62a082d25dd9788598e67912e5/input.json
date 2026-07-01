@@ -4,8 +4,8 @@
     "build_asset_types": [],
     "linking_enabled": true
   },
-  "out_dir_shared": "/Users/prakashs/Library/Application Support/Claude/local-agent-mode-sessions/a118008e-e122-4c21-9e38-f3abb074ac50/09e84e5f-c00f-4378-9cf2-6b98a0cf0bfb/local_ec71c68c-84b5-4b37-9cc9-68c989adf61d/outputs/terratrackFInal/.dart_tool/hooks_runner/shared/objective_c/build/",
-  "out_file": "/Users/prakashs/Library/Application Support/Claude/local-agent-mode-sessions/a118008e-e122-4c21-9e38-f3abb074ac50/09e84e5f-c00f-4378-9cf2-6b98a0cf0bfb/local_ec71c68c-84b5-4b37-9cc9-68c989adf61d/outputs/terratrackFInal/.dart_tool/hooks_runner/objective_c/6782ff62a082d25dd9788598e67912e5/output.json",
+  "out_dir_shared": "/Users/prakashs/Development/terratrackFInal/.dart_tool/hooks_runner/shared/objective_c/build/",
+  "out_file": "/Users/prakashs/Development/terratrackFInal/.dart_tool/hooks_runner/objective_c/6782ff62a082d25dd9788598e67912e5/output.json",
   "package_name": "objective_c",
   "package_root": "/Users/prakashs/.pub-cache/hosted/pub.dev/objective_c-9.4.1/",
   "user_defines": {}

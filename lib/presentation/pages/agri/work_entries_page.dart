@@ -69,10 +69,14 @@ class WorkEntriesPage extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _WorkEntryTile(
                   entry: entry,
-                  onTap: () => _openEntryForm(context, uid: uid, existing: entry),
+                  onTap: () =>
+                      _openEntryForm(context, uid: uid, existing: entry),
                   onDelete: () => _deleteEntry(context, ref, entry),
                 ),
-              ).animate().fadeIn(duration: 250.ms, delay: (i * 30).ms).slideX(begin: -0.03);
+              )
+                  .animate()
+                  .fadeIn(duration: 250.ms, delay: (i * 30).ms)
+                  .slideX(begin: -0.03);
             },
           );
         },
@@ -83,9 +87,12 @@ class WorkEntriesPage extends ConsumerWidget {
   Future<void> _deleteEntry(
       BuildContext context, WidgetRef ref, AgriWorkEntryEntity entry) async {
     final l = AppLocalizations.of(context);
-    final confirmed = await showAgriDeleteConfirm(context, l.deleteWorkEntryAgriConfirm);
+    final confirmed =
+        await showAgriDeleteConfirm(context, l.deleteWorkEntryAgriConfirm);
     if (!confirmed) return;
-    final ok = await ref.read(agriWorkEntryFormProvider.notifier).deleteWorkEntry(entry.id);
+    final ok = await ref
+        .read(agriWorkEntryFormProvider.notifier)
+        .deleteWorkEntry(entry.id);
     if (!ok && context.mounted) {
       showAgriSnack(context,
           error: ref.read(agriWorkEntryFormProvider).error ?? l.errorOccurred);
@@ -110,7 +117,8 @@ class _WorkEntryTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDelete;
 
-  const _WorkEntryTile({required this.entry, required this.onTap, required this.onDelete});
+  const _WorkEntryTile(
+      {required this.entry, required this.onTap, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +156,8 @@ class _WorkEntryTile extends StatelessWidget {
                   Text('${entry.landName} • ${entry.workerName}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(color: AppColors.grey500)),
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: AppColors.grey500)),
                   const SizedBox(height: 6),
                   Wrap(spacing: 8, runSpacing: 6, children: [
                     _Chip(
@@ -158,7 +167,8 @@ class _WorkEntryTile extends StatelessWidget {
                         label: '${entry.hoursWorked} ${l.hoursWorkedAgri}',
                         icon: Icons.timer_outlined),
                     _Chip(
-                        label: '${l.wageAmount}: ${entry.wageAmount.toStringAsFixed(0)}',
+                        label:
+                            '${l.wageAmount}: ${entry.wageAmount.toStringAsFixed(0)}',
                         icon: Icons.payments_outlined,
                         color: AppColors.secondary),
                   ]),
@@ -194,7 +204,9 @@ class _Chip extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         if (icon != null) Icon(icon, size: 12, color: c),
         if (icon != null) const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.w600)),
+        Text(label,
+            style:
+                TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.w600)),
       ]),
     );
   }
@@ -206,7 +218,8 @@ class _WorkEntryFormSheet extends ConsumerStatefulWidget {
   const _WorkEntryFormSheet({required this.uid, this.existing});
 
   @override
-  ConsumerState<_WorkEntryFormSheet> createState() => _WorkEntryFormSheetState();
+  ConsumerState<_WorkEntryFormSheet> createState() =>
+      _WorkEntryFormSheetState();
 }
 
 class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
@@ -231,8 +244,10 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
     super.initState();
     final e = widget.existing;
     _descriptionCtrl = TextEditingController(text: e?.workDescription ?? '');
-    _hoursCtrl = TextEditingController(text: e != null ? e.hoursWorked.toString() : '');
-    _wageCtrl = TextEditingController(text: e != null ? e.wageAmount.toString() : '');
+    _hoursCtrl =
+        TextEditingController(text: e != null ? e.hoursWorked.toString() : '');
+    _wageCtrl =
+        TextEditingController(text: e != null ? e.wageAmount.toString() : '');
     _notesCtrl = TextEditingController(text: e?.notes ?? '');
     _landId = e?.landId;
     _landName = e?.landName;
@@ -299,8 +314,9 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
     );
 
     final notifier = ref.read(agriWorkEntryFormProvider.notifier);
-    final ok =
-        _isEdit ? await notifier.updateWorkEntry(entry) : await notifier.addWorkEntry(entry);
+    final ok = _isEdit
+        ? await notifier.updateWorkEntry(entry)
+        : await notifier.addWorkEntry(entry);
 
     if (!mounted) return;
     if (ok) {
@@ -356,7 +372,7 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                   error: (e, st) => Text(e.toString(),
                       style: const TextStyle(color: AppColors.error)),
                   data: (lands) => DropdownButtonFormField<String>(
-                    value: _landId,
+                    initialValue: _landId,
                     decoration: InputDecoration(
                       labelText: l.selectLand,
                       prefixIcon: const Icon(Icons.terrain_outlined),
@@ -364,7 +380,8 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                     items: lands
                         .map((land) => DropdownMenuItem(
                               value: land.id,
-                              child: Text(land.name, overflow: TextOverflow.ellipsis),
+                              child: Text(land.name,
+                                  overflow: TextOverflow.ellipsis),
                             ))
                         .toList(),
                     onChanged: (id) {
@@ -383,7 +400,7 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                   error: (e, st) => Text(e.toString(),
                       style: const TextStyle(color: AppColors.error)),
                   data: (workers) => DropdownButtonFormField<String>(
-                    value: _workerId,
+                    initialValue: _workerId,
                     decoration: InputDecoration(
                       labelText: l.selectWorker,
                       prefixIcon: const Icon(Icons.person_outline),
@@ -391,7 +408,8 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                     items: workers
                         .map((worker) => DropdownMenuItem(
                               value: worker.id,
-                              child: Text(worker.name, overflow: TextOverflow.ellipsis),
+                              child: Text(worker.name,
+                                  overflow: TextOverflow.ellipsis),
                             ))
                         .toList(),
                     onChanged: (id) {
@@ -414,8 +432,9 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                   hint: l.workDescriptionHint,
                   icon: Icons.description_outlined,
                   maxLines: 2,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l.workDescriptionHint : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l.workDescriptionHint
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 AgriDateField(
@@ -431,7 +450,8 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                       controller: _hoursCtrl,
                       label: l.hoursWorkedAgri,
                       icon: Icons.timer_outlined,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       validator: (v) {
                         final n = double.tryParse(v?.trim() ?? '');
                         if (n == null || n <= 0) return l.hoursWorkedAgri;
@@ -445,7 +465,8 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                       controller: _wageCtrl,
                       label: l.wageAmount,
                       icon: Icons.payments_outlined,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       validator: (v) {
                         final n = double.tryParse(v?.trim() ?? '');
                         if (n == null || n < 0) return l.wageAmount;
@@ -458,7 +479,8 @@ class _WorkEntryFormSheetState extends ConsumerState<_WorkEntryFormSheet> {
                 Center(
                   child: AgriPhotoAvatar(
                     newBytes: _newPhotoBytes,
-                    networkUrl: _photoRemoved ? null : widget.existing?.photoUrl,
+                    networkUrl:
+                        _photoRemoved ? null : widget.existing?.photoUrl,
                     onTap: _pickPhoto,
                     onRemove: () => setState(() {
                       _newPhotoBytes = null;

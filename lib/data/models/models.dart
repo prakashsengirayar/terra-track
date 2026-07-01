@@ -5,6 +5,7 @@ import '../../domain/entities/entities.dart';
 class VehicleModel extends VehicleEntity {
   const VehicleModel({
     required super.id,
+    required super.vehicleNumber,
     required super.vehicleName,
     required super.driverName,
     required super.isActive,
@@ -15,6 +16,7 @@ class VehicleModel extends VehicleEntity {
     final data = doc.data() as Map<String, dynamic>;
     return VehicleModel(
       id: doc.id,
+      vehicleNumber: data['vehicleNumber'] as String? ?? '',
       vehicleName: data['vehicleName'] as String? ?? '',
       driverName: data['driverName'] as String? ?? '',
       isActive: data['isActive'] as bool? ?? true,
@@ -23,6 +25,7 @@ class VehicleModel extends VehicleEntity {
   }
 
   Map<String, dynamic> toFirestore() => {
+        'vehicleNumber': vehicleNumber,
         'vehicleName': vehicleName,
         'driverName': driverName,
         'isActive': isActive,
@@ -31,6 +34,7 @@ class VehicleModel extends VehicleEntity {
 
   factory VehicleModel.fromEntity(VehicleEntity entity) => VehicleModel(
         id: entity.id,
+        vehicleNumber: entity.vehicleNumber,
         vehicleName: entity.vehicleName,
         driverName: entity.driverName,
         isActive: entity.isActive,

@@ -166,15 +166,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                         color: AppColors.white, strokeWidth: 2))
                                 : Text(l.signIn),
                           ),
-                          const SizedBox(height: 12),
-                          // Admin link
-                          Center(
-                            child: TextButton(
-                              onPressed: () => context.go('/admin'),
-                              child: const Text('Admin Panel →',
-                                  style: TextStyle(color: AppColors.grey500, fontSize: 13)),
-                            ),
-                          ),
                         ],
                       ),
                     ),

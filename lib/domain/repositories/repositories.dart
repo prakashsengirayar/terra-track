@@ -4,9 +4,13 @@ import '../../core/errors/failures.dart';
 import '../entities/entities.dart';
 
 abstract class VehicleRepository {
-  Future<Either<Failure, VehicleEntity>> verifyVehicle(String vehicleName);
+  Future<Either<Failure, VehicleEntity>> verifyVehicle(String vehicleNumber);
   Future<Either<Failure, List<VehicleEntity>>> getAllVehicles();
+  Future<Either<Failure, List<VehicleEntity>>> getAllVehiclesIncludingInactive();
   Future<Either<Failure, VehicleEntity>> getVehicleById(String id);
+  Future<Either<Failure, VehicleEntity>> createVehicle(VehicleEntity vehicle);
+  Future<Either<Failure, VehicleEntity>> updateVehicle(VehicleEntity vehicle);
+  Future<Either<Failure, bool>> deleteVehicle(String id);
 }
 
 abstract class WorkEntryRepository {

@@ -2,8 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /vehicles/{vehicleId} {
-      allow read: if true;
-      allow write: if false;
+      allow read, write: if true;
     }
     match /workEntries/{entryId} {
       allow read, write: if true;
@@ -55,6 +54,16 @@ service cloud.firestore {
     }
 
     match /harvests/{harvestId} {
+      allow read, update, delete: if request.auth != null
+          && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null
+          && request.auth.uid == request.resource.data.ownerId;
+    }
+
+    // Deliberately a distinct collection (`agriVehicles`) from `vehicles`
+    // above, which belongs to the unrelated vehicle/driver login module and
+    // must not be touched by this rule.
+    match /agriVehicles/{vehicleId} {
       allow read, update, delete: if request.auth != null
           && request.auth.uid == resource.data.ownerId;
       allow create: if request.auth != null

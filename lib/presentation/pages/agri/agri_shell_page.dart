@@ -25,6 +25,7 @@ class AgriShellPage extends ConsumerWidget {
     '/agri/workers',
     '/agri/work-entries',
     '/agri/expenses-harvests',
+    '/agri/vehicles',
   ];
 
   int _indexForLocation(String location) {
@@ -90,6 +91,11 @@ class AgriShellPage extends ConsumerWidget {
             icon: const Icon(Icons.receipt_long_outlined),
             activeIcon: const Icon(Icons.receipt_long),
             label: l.expensesAndHarvests,
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.directions_car_outlined),
+            activeIcon: const Icon(Icons.directions_car),
+            label: l.vehicles,
           ),
         ],
       ),

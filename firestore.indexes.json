@@ -47,6 +47,14 @@
         { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "harvestDate", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "agriVehicles",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "ownerId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

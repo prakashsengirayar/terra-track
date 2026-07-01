@@ -16,7 +16,7 @@ class AdminShellPage extends ConsumerStatefulWidget {
 class _AdminShellPageState extends ConsumerState<AdminShellPage> {
   int _selectedIndex = 0;
 
-  final _routes = ['/admin', '/admin/add-entry', '/admin/settings'];
+  final _routes = ['/admin', '/admin/add-entry', '/admin/vehicles', '/admin/settings'];
 
   void _navigate(int index) {
     setState(() => _selectedIndex = index);
@@ -31,6 +31,7 @@ class _AdminShellPageState extends ConsumerState<AdminShellPage> {
     final navItems = [
       (Icons.dashboard_outlined, Icons.dashboard, l.dashboard),
       (Icons.add_box_outlined, Icons.add_box, l.addEntry),
+      (Icons.directions_car_outlined, Icons.directions_car, 'Vehicles'),
       (Icons.settings_outlined, Icons.settings, l.settings),
     ];
 

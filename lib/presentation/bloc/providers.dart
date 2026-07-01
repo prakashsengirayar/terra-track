@@ -81,3 +81,15 @@ final sendMessageUseCaseProvider = Provider(
 final getAllVehiclesUseCaseProvider = Provider(
   (ref) => GetAllVehiclesUseCase(ref.read(vehicleRepositoryProvider)),
 );
+final getAllVehiclesIncludingInactiveUseCaseProvider = Provider(
+  (ref) => GetAllVehiclesIncludingInactiveUseCase(ref.read(vehicleRepositoryProvider)),
+);
+final createVehicleUseCaseProvider = Provider(
+  (ref) => CreateVehicleUseCase(ref.read(vehicleRepositoryProvider)),
+);
+final updateVehicleUseCaseProvider = Provider(
+  (ref) => UpdateVehicleUseCase(ref.read(vehicleRepositoryProvider)),
+);
+final deleteVehicleUseCaseProvider = Provider(
+  (ref) => DeleteVehicleUseCase(ref.read(vehicleRepositoryProvider)),
+);

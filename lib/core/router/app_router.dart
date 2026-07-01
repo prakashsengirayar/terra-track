@@ -12,6 +12,7 @@ import '../../presentation/pages/client/entry_detail_page.dart';
 import '../../presentation/pages/admin/admin_shell_page.dart';
 import '../../presentation/pages/admin/dashboard_page.dart';
 import '../../presentation/pages/admin/add_entry_page.dart';
+import '../../presentation/pages/admin/vehicle_entry_page.dart';
 import '../../presentation/pages/settings/settings_page.dart';
 import '../../presentation/pages/splash_page.dart';
 import '../../presentation/pages/agri/agri_login_page.dart';
@@ -20,6 +21,7 @@ import '../../presentation/pages/agri/lands_page.dart';
 import '../../presentation/pages/agri/workers_page.dart';
 import '../../presentation/pages/agri/work_entries_page.dart';
 import '../../presentation/pages/agri/expenses_harvests_page.dart';
+import '../../presentation/pages/agri/vehicles_page.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authProvider.notifier);
@@ -98,6 +100,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/agri/expenses-harvests',
             builder: (_, __) => const ExpensesHarvestsPage(),
           ),
+          GoRoute(
+            path: '/agri/vehicles',
+            builder: (_, __) => const VehiclesPage(),
+          ),
         ],
       ),
       ShellRoute(
@@ -132,6 +138,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/admin/add-entry',
             builder: (_, __) => const AddEntryPage(),
+          ),
+          GoRoute(
+            path: '/admin/vehicles',
+            builder: (_, __) => const VehicleEntryPage(),
           ),
           GoRoute(
             path: '/admin/settings',

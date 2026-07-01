@@ -53,7 +53,8 @@ class ExpensesHarvestsPage extends ConsumerStatefulWidget {
   const ExpensesHarvestsPage({super.key});
 
   @override
-  ConsumerState<ExpensesHarvestsPage> createState() => _ExpensesHarvestsPageState();
+  ConsumerState<ExpensesHarvestsPage> createState() =>
+      _ExpensesHarvestsPageState();
 }
 
 class _ExpensesHarvestsPageState extends ConsumerState<ExpensesHarvestsPage>
@@ -93,8 +94,12 @@ class _ExpensesHarvestsPageState extends ConsumerState<ExpensesHarvestsPage>
               unselectedLabelColor: AppColors.grey500,
               indicatorColor: AppColors.primary,
               tabs: [
-                Tab(text: l.expenses, icon: const Icon(Icons.receipt_long_outlined)),
-                Tab(text: l.harvests, icon: const Icon(Icons.agriculture_outlined)),
+                Tab(
+                    text: l.expenses,
+                    icon: const Icon(Icons.receipt_long_outlined)),
+                Tab(
+                    text: l.harvests,
+                    icon: const Icon(Icons.agriculture_outlined)),
               ],
             ),
           ),
@@ -123,7 +128,8 @@ class _ExpensesHarvestsPageState extends ConsumerState<ExpensesHarvestsPage>
   }
 }
 
-void _openExpenseForm(BuildContext context, {required String uid, ExpenseEntity? existing}) {
+void _openExpenseForm(BuildContext context,
+    {required String uid, ExpenseEntity? existing}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -134,7 +140,8 @@ void _openExpenseForm(BuildContext context, {required String uid, ExpenseEntity?
   );
 }
 
-void _openHarvestForm(BuildContext context, {required String uid, HarvestEntity? existing}) {
+void _openHarvestForm(BuildContext context,
+    {required String uid, HarvestEntity? existing}) {
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
@@ -179,23 +186,31 @@ class _ExpensesTab extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: _ExpenseTile(
                 expense: expense,
-                onTap: () => _openExpenseForm(context, uid: uid, existing: expense),
+                onTap: () =>
+                    _openExpenseForm(context, uid: uid, existing: expense),
                 onDelete: () => _deleteExpense(context, ref, expense),
               ),
-            ).animate().fadeIn(duration: 250.ms, delay: (i * 30).ms).slideX(begin: -0.03);
+            )
+                .animate()
+                .fadeIn(duration: 250.ms, delay: (i * 30).ms)
+                .slideX(begin: -0.03);
           },
         );
       },
     );
   }
 
-  Future<void> _deleteExpense(BuildContext context, WidgetRef ref, ExpenseEntity expense) async {
+  Future<void> _deleteExpense(
+      BuildContext context, WidgetRef ref, ExpenseEntity expense) async {
     final l = AppLocalizations.of(context);
-    final confirmed = await showAgriDeleteConfirm(context, l.deleteExpenseConfirm);
+    final confirmed =
+        await showAgriDeleteConfirm(context, l.deleteExpenseConfirm);
     if (!confirmed) return;
-    final ok = await ref.read(expenseFormProvider.notifier).deleteExpense(expense.id);
+    final ok =
+        await ref.read(expenseFormProvider.notifier).deleteExpense(expense.id);
     if (!ok && context.mounted) {
-      showAgriSnack(context, error: ref.read(expenseFormProvider).error ?? l.errorOccurred);
+      showAgriSnack(context,
+          error: ref.read(expenseFormProvider).error ?? l.errorOccurred);
     }
   }
 }
@@ -204,7 +219,8 @@ class _ExpenseTile extends StatelessWidget {
   final ExpenseEntity expense;
   final VoidCallback onTap;
   final VoidCallback onDelete;
-  const _ExpenseTile({required this.expense, required this.onTap, required this.onDelete});
+  const _ExpenseTile(
+      {required this.expense, required this.onTap, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -240,8 +256,10 @@ class _ExpenseTile extends StatelessWidget {
                           ?.copyWith(fontWeight: FontWeight.w600)),
                   const SizedBox(height: 2),
                   Text(
-                    expense.landName ?? DateFormat('dd MMM yyyy').format(expense.date),
-                    style: theme.textTheme.bodySmall?.copyWith(color: AppColors.grey500),
+                    expense.landName ??
+                        DateFormat('dd MMM yyyy').format(expense.date),
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: AppColors.grey500),
                   ),
                   const SizedBox(height: 6),
                   Wrap(spacing: 8, runSpacing: 6, children: [
@@ -260,7 +278,8 @@ class _ExpenseTile extends StatelessWidget {
                     style: const TextStyle(
                         color: AppColors.error, fontWeight: FontWeight.w700)),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                  icon: const Icon(Icons.delete_outline,
+                      color: AppColors.error, size: 20),
                   onPressed: onDelete,
                 ),
               ],
@@ -306,23 +325,31 @@ class _HarvestsTab extends ConsumerWidget {
               padding: const EdgeInsets.only(bottom: 12),
               child: _HarvestTile(
                 harvest: harvest,
-                onTap: () => _openHarvestForm(context, uid: uid, existing: harvest),
+                onTap: () =>
+                    _openHarvestForm(context, uid: uid, existing: harvest),
                 onDelete: () => _deleteHarvest(context, ref, harvest),
               ),
-            ).animate().fadeIn(duration: 250.ms, delay: (i * 30).ms).slideX(begin: -0.03);
+            )
+                .animate()
+                .fadeIn(duration: 250.ms, delay: (i * 30).ms)
+                .slideX(begin: -0.03);
           },
         );
       },
     );
   }
 
-  Future<void> _deleteHarvest(BuildContext context, WidgetRef ref, HarvestEntity harvest) async {
+  Future<void> _deleteHarvest(
+      BuildContext context, WidgetRef ref, HarvestEntity harvest) async {
     final l = AppLocalizations.of(context);
-    final confirmed = await showAgriDeleteConfirm(context, l.deleteHarvestConfirm);
+    final confirmed =
+        await showAgriDeleteConfirm(context, l.deleteHarvestConfirm);
     if (!confirmed) return;
-    final ok = await ref.read(harvestFormProvider.notifier).deleteHarvest(harvest.id);
+    final ok =
+        await ref.read(harvestFormProvider.notifier).deleteHarvest(harvest.id);
     if (!ok && context.mounted) {
-      showAgriSnack(context, error: ref.read(harvestFormProvider).error ?? l.errorOccurred);
+      showAgriSnack(context,
+          error: ref.read(harvestFormProvider).error ?? l.errorOccurred);
     }
   }
 }
@@ -331,7 +358,8 @@ class _HarvestTile extends StatelessWidget {
   final HarvestEntity harvest;
   final VoidCallback onTap;
   final VoidCallback onDelete;
-  const _HarvestTile({required this.harvest, required this.onTap, required this.onDelete});
+  const _HarvestTile(
+      {required this.harvest, required this.onTap, required this.onDelete});
 
   @override
   Widget build(BuildContext context) {
@@ -368,12 +396,14 @@ class _HarvestTile extends StatelessWidget {
                   Text(harvest.landName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.bodySmall?.copyWith(color: AppColors.grey500)),
+                      style: theme.textTheme.bodySmall
+                          ?.copyWith(color: AppColors.grey500)),
                   const SizedBox(height: 6),
                   Wrap(spacing: 8, runSpacing: 6, children: [
                     _Chip(label: '${harvest.quantity} ${harvest.unit}'),
                     _Chip(
-                        label: DateFormat('dd MMM yyyy').format(harvest.harvestDate),
+                        label: DateFormat('dd MMM yyyy')
+                            .format(harvest.harvestDate),
                         color: AppColors.grey500),
                   ]),
                 ],
@@ -386,7 +416,8 @@ class _HarvestTile extends StatelessWidget {
                     style: const TextStyle(
                         color: AppColors.success, fontWeight: FontWeight.w700)),
                 IconButton(
-                  icon: const Icon(Icons.delete_outline, color: AppColors.error, size: 20),
+                  icon: const Icon(Icons.delete_outline,
+                      color: AppColors.error, size: 20),
                   onPressed: onDelete,
                 ),
               ],
@@ -412,7 +443,9 @@ class _Chip extends StatelessWidget {
         color: c.withOpacity(0.12),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.w600)),
+      child: Text(label,
+          style:
+              TextStyle(fontSize: 11, color: c, fontWeight: FontWeight.w600)),
     );
   }
 }
@@ -447,7 +480,8 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _amountCtrl = TextEditingController(text: e != null ? e.amount.toString() : '');
+    _amountCtrl =
+        TextEditingController(text: e != null ? e.amount.toString() : '');
     _descriptionCtrl = TextEditingController(text: e?.description ?? '');
     _category = e?.category ?? ExpenseCategory.other;
     _landId = e?.landId;
@@ -477,7 +511,8 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
     if (!_formKey.currentState!.validate()) return;
 
     final id = widget.existing?.id ?? _uuid.v4();
-    String? receiptUrl = _photoRemoved ? null : widget.existing?.receiptPhotoUrl;
+    String? receiptUrl =
+        _photoRemoved ? null : widget.existing?.receiptPhotoUrl;
 
     if (_newPhotoBytes != null) {
       try {
@@ -507,13 +542,16 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
     );
 
     final notifier = ref.read(expenseFormProvider.notifier);
-    final ok = _isEdit ? await notifier.updateExpense(expense) : await notifier.addExpense(expense);
+    final ok = _isEdit
+        ? await notifier.updateExpense(expense)
+        : await notifier.addExpense(expense);
 
     if (!mounted) return;
     if (ok) {
       Navigator.pop(context);
     } else {
-      showAgriSnack(context, error: ref.read(expenseFormProvider).error ?? l.errorOccurred);
+      showAgriSnack(context,
+          error: ref.read(expenseFormProvider).error ?? l.errorOccurred);
     }
   }
 
@@ -557,22 +595,25 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
                         ?.copyWith(color: AppColors.primaryDark)),
                 const SizedBox(height: 20),
                 DropdownButtonFormField<ExpenseCategory>(
-                  value: _category,
+                  initialValue: _category,
                   decoration: InputDecoration(
                     labelText: l.expenseCategory,
                     prefixIcon: const Icon(Icons.category_outlined),
                   ),
                   items: ExpenseCategory.values
-                      .map((c) => DropdownMenuItem(value: c, child: Text(_categoryLabel(l, c))))
+                      .map((c) => DropdownMenuItem(
+                          value: c, child: Text(_categoryLabel(l, c))))
                       .toList(),
-                  onChanged: (c) => setState(() => _category = c ?? ExpenseCategory.other),
+                  onChanged: (c) =>
+                      setState(() => _category = c ?? ExpenseCategory.other),
                 ),
                 const SizedBox(height: 16),
                 AgriField(
                   controller: _amountCtrl,
                   label: l.expenseAmount,
                   icon: Icons.payments_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   validator: (v) {
                     final n = double.tryParse(v?.trim() ?? '');
                     if (n == null || n <= 0) return l.expenseAmount;
@@ -591,16 +632,18 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
                   loading: () => const LinearProgressIndicator(),
                   error: (e, st) => const SizedBox.shrink(),
                   data: (lands) => DropdownButtonFormField<String?>(
-                    value: _landId,
+                    initialValue: _landId,
                     decoration: InputDecoration(
                       labelText: l.selectLand,
                       prefixIcon: const Icon(Icons.terrain_outlined),
                     ),
                     items: [
-                      const DropdownMenuItem<String?>(value: null, child: Text('—')),
+                      const DropdownMenuItem<String?>(
+                          value: null, child: Text('—')),
                       ...lands.map((land) => DropdownMenuItem<String?>(
                             value: land.id,
-                            child: Text(land.name, overflow: TextOverflow.ellipsis),
+                            child: Text(land.name,
+                                overflow: TextOverflow.ellipsis),
                           )),
                     ],
                     onChanged: (id) {
@@ -626,8 +669,9 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
                   hint: l.expenseDescriptionHint,
                   icon: Icons.description_outlined,
                   maxLines: 2,
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l.expenseDescriptionHint : null,
+                  validator: (v) => (v == null || v.trim().isEmpty)
+                      ? l.expenseDescriptionHint
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 Column(
@@ -640,7 +684,9 @@ class _ExpenseFormSheetState extends ConsumerState<_ExpenseFormSheet> {
                     const SizedBox(height: 8),
                     AgriPhotoAvatar(
                       newBytes: _newPhotoBytes,
-                      networkUrl: _photoRemoved ? null : widget.existing?.receiptPhotoUrl,
+                      networkUrl: _photoRemoved
+                          ? null
+                          : widget.existing?.receiptPhotoUrl,
                       onTap: _pickPhoto,
                       onRemove: () => setState(() {
                         _newPhotoBytes = null;
@@ -700,9 +746,11 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
     super.initState();
     final e = widget.existing;
     _cropCtrl = TextEditingController(text: e?.cropName ?? '');
-    _quantityCtrl = TextEditingController(text: e != null ? e.quantity.toString() : '');
+    _quantityCtrl =
+        TextEditingController(text: e != null ? e.quantity.toString() : '');
     _unitCtrl = TextEditingController(text: e?.unit ?? '');
-    _priceCtrl = TextEditingController(text: e != null ? e.pricePerUnit.toString() : '');
+    _priceCtrl =
+        TextEditingController(text: e != null ? e.pricePerUnit.toString() : '');
     _notesCtrl = TextEditingController(text: e?.notes ?? '');
     _landId = e?.landId;
     _landName = e?.landName;
@@ -777,13 +825,16 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
     );
 
     final notifier = ref.read(harvestFormProvider.notifier);
-    final ok = _isEdit ? await notifier.updateHarvest(harvest) : await notifier.addHarvest(harvest);
+    final ok = _isEdit
+        ? await notifier.updateHarvest(harvest)
+        : await notifier.addHarvest(harvest);
 
     if (!mounted) return;
     if (ok) {
       Navigator.pop(context);
     } else {
-      showAgriSnack(context, error: ref.read(harvestFormProvider).error ?? l.errorOccurred);
+      showAgriSnack(context,
+          error: ref.read(harvestFormProvider).error ?? l.errorOccurred);
     }
   }
 
@@ -831,7 +882,7 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                   error: (e, st) => Text(e.toString(),
                       style: const TextStyle(color: AppColors.error)),
                   data: (lands) => DropdownButtonFormField<String>(
-                    value: _landId,
+                    initialValue: _landId,
                     decoration: InputDecoration(
                       labelText: l.selectLand,
                       prefixIcon: const Icon(Icons.terrain_outlined),
@@ -839,7 +890,8 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                     items: lands
                         .map((land) => DropdownMenuItem(
                               value: land.id,
-                              child: Text(land.name, overflow: TextOverflow.ellipsis),
+                              child: Text(land.name,
+                                  overflow: TextOverflow.ellipsis),
                             ))
                         .toList(),
                     onChanged: (id) {
@@ -858,7 +910,8 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                   label: l.cropName,
                   hint: l.cropNameHint,
                   icon: Icons.eco_outlined,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? l.cropNameHint : null,
+                  validator: (v) =>
+                      (v == null || v.trim().isEmpty) ? l.cropNameHint : null,
                 ),
                 const SizedBox(height: 16),
                 Row(children: [
@@ -868,7 +921,8 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                       label: l.quantity,
                       hint: l.quantityHint,
                       icon: Icons.scale_outlined,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
                       validator: (v) {
                         final n = double.tryParse(v?.trim() ?? '');
                         if (n == null || n <= 0) return l.quantityHint;
@@ -883,7 +937,8 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                       label: l.unit,
                       hint: l.unitHint,
                       icon: Icons.straighten_outlined,
-                      validator: (v) => (v == null || v.trim().isEmpty) ? l.unitHint : null,
+                      validator: (v) =>
+                          (v == null || v.trim().isEmpty) ? l.unitHint : null,
                     ),
                   ),
                 ]),
@@ -893,7 +948,8 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                   label: l.pricePerUnit,
                   hint: l.pricePerUnitHint,
                   icon: Icons.sell_outlined,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType:
+                      const TextInputType.numberWithOptions(decimal: true),
                   validator: (v) {
                     final n = double.tryParse(v?.trim() ?? '');
                     if (n == null || n <= 0) return l.pricePerUnitHint;
@@ -923,7 +979,8 @@ class _HarvestFormSheetState extends ConsumerState<_HarvestFormSheet> {
                 Center(
                   child: AgriPhotoAvatar(
                     newBytes: _newPhotoBytes,
-                    networkUrl: _photoRemoved ? null : widget.existing?.photoUrl,
+                    networkUrl:
+                        _photoRemoved ? null : widget.existing?.photoUrl,
                     onTap: _pickPhoto,
                     onRemove: () => setState(() {
                       _newPhotoBytes = null;
