@@ -55,6 +55,32 @@ class AppColors {
   static const Color darkSurface = Color(0xFF1A3024);
   static const Color darkSurfaceVariant = Color(0xFF22402F);
   static const Color darkBorder = Color(0xFF2D5038);
+
+  // --- "Entry" dark palette: used by the New Entry screen and the app's
+  // nav bar (top bar + bottom nav) to match the TerraTrack Entry mockup. ---
+  static const Color entryBgTop = Color(0xFF0F2119);
+  static const Color entryBgBottom = Color(0xFF070F0C);
+  static const Color entryHeaderTop = Color(0xFF0C1A14);
+  static const Color entryHeaderBottom = Color(0xFF08120D);
+  static const Color entryNavBg = Color(0xFF0A1611);
+  static const Color entryCardBg = Color(0x08FFFFFF); // rgba(255,255,255,.03)
+  static const Color entryCardBorder = Color(0x14FFFFFF); // rgba(255,255,255,.08)
+  static const Color entryTileBg = Color(0x08FFFFFF); // rgba(255,255,255,.03)
+  static const Color entryIconTileBg = Color(0x0DFFFFFF); // rgba(255,255,255,.05)
+  static const Color entryAccent = Color(0xFF34D17E);
+  static const Color entryAccentDark = Color(0xFF2FAE68);
+  static const Color entryAccentSurface = Color(0x1A34D17E); // rgba(52,209,126,.10)
+  static const Color entryAccentSurfaceSoft = Color(0x1434D17E); // rgba(52,209,126,.08)
+  static const Color entryAccentBorder = Color(0x6634D17E); // rgba(52,209,126,.40)
+  static const Color entryAccentBorderSoft = Color(0x4034D17E); // rgba(52,209,126,.25)
+  static const Color entryAccentDashed = Color(0x1F34D17E); // rgba(52,209,126,.12)
+  static const Color entryTextPrimary = Color(0xFFEAF3EC);
+  static const Color entryTextSecondary = Color(0xFFC8D6CD);
+  static const Color entryTextMuted = Color(0xFF86A596);
+  static const Color entryTextMuted2 = Color(0xFF7F9A8B);
+  static const Color entryPillGreen = Color(0xFFA9DCBB);
+  static const Color entryPillGreenLight = Color(0xFFBFE8CB);
+  static const Color entryPillText = Color(0xFF08120C);
 }
 
 class AppTheme {

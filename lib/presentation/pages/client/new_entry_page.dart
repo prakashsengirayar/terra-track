@@ -9,6 +9,9 @@ import '../../../core/theme/app_theme.dart';
 import '../../bloc/auth/auth_provider.dart';
 import '../../bloc/work_entry/work_entry_provider.dart';
 
+/// New Entry screen — restyled to match the "TerraTrack Entry" dark mockup:
+/// a deep green/black gradient background with rounded translucent cards
+/// (Customer / Work / Payment / Details) and a green accent throughout.
 class NewEntryPage extends ConsumerStatefulWidget {
   const NewEntryPage({super.key});
   @override
@@ -19,18 +22,17 @@ class _NewEntryPageState extends ConsumerState<NewEntryPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _nativeCtrl = TextEditingController();
-  final _rateCtrl = TextEditingController();
   final _paidCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
-  DateTime _selectedDate = DateTime.now();
   final _picker = ImagePicker();
-  final _currency = NumberFormat.currency(locale: 'en_IN', symbol: '₹', decimalDigits: 0);
+  final _numFmt = NumberFormat.decimalPattern('en_IN');
 
-  double get _totalAmount {
-    final secs = ref.read(timerProvider).elapsedSeconds;
-    final rate = double.tryParse(_rateCtrl.text) ?? 0;
-    return (secs / 3600.0) * rate;
-  }
+  double _rate = 100;
+  int _hrs = 0;
+  int _mins = 0;
+  DateTime _selectedDate = DateTime.now();
+
+  double get _totalAmount => _rate * (_hrs + _mins / 60);
 
   double get _balance {
     final paid = double.tryParse(_paidCtrl.text) ?? 0;
@@ -38,10 +40,21 @@ class _NewEntryPageState extends ConsumerState<NewEntryPage> {
     return b < 0 ? 0 : b;
   }
 
+  String _fmt(num n) => _numFmt.format(n.round());
+
+  void _incRate() => setState(() => _rate = (_rate + 10).clamp(0, 9999).toDouble());
+  void _decRate() => setState(() => _rate = (_rate - 10).clamp(0, 9999).toDouble());
+  void _incHrs() => setState(() => _hrs = (_hrs + 1).clamp(0, 24).toInt());
+  void _decHrs() => setState(() => _hrs = (_hrs - 1).clamp(0, 24).toInt());
+  void _incMins() => setState(() => _mins = (_mins + 5) % 60);
+  void _decMins() => setState(() => _mins = (_mins + 55) % 60);
+
   @override
   void dispose() {
-    _nameCtrl.dispose(); _nativeCtrl.dispose(); _rateCtrl.dispose();
-    _paidCtrl.dispose(); _phoneCtrl.dispose();
+    _nameCtrl.dispose();
+    _nativeCtrl.dispose();
+    _paidCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
@@ -70,11 +83,14 @@ class _NewEntryPageState extends ConsumerState<NewEntryPage> {
 
   Future<void> _save() async {
     if (!_formKey.currentState!.validate()) return;
-    final timer = ref.read(timerProvider);
-    if (timer.status != TimerStatus.stopped || timer.elapsedSeconds == 0) {
+    if (_rate <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context).startTimerFirst)),
-      );
+        const SnackBar(content: Text('Set a rate per hour first')));
+      return;
+    }
+    if (_hrs == 0 && _mins == 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Set the hours worked first')));
       return;
     }
     final session = ref.read(authProvider).session!;
@@ -83,20 +99,27 @@ class _NewEntryPageState extends ConsumerState<NewEntryPage> {
       nativePlace: _nativeCtrl.text,
       vehicleName: session.vehicleName,
       driverName: session.driverName,
-      ratePerHour: double.parse(_rateCtrl.text),
-      timerSeconds: timer.elapsedSeconds,
+      ratePerHour: _rate,
+      timerSeconds: _hrs * 3600 + _mins * 60,
       paidAmount: double.tryParse(_paidCtrl.text) ?? 0,
       date: _selectedDate,
       customerPhone: _phoneCtrl.text,
     );
     if (ok && mounted) {
       _formKey.currentState!.reset();
-      _nameCtrl.clear(); _nativeCtrl.clear(); _rateCtrl.clear();
-      _paidCtrl.clear(); _phoneCtrl.clear();
-      setState(() => _selectedDate = DateTime.now());
+      _nameCtrl.clear();
+      _nativeCtrl.clear();
+      _paidCtrl.clear();
+      _phoneCtrl.clear();
+      setState(() {
+        _rate = 100;
+        _hrs = 0;
+        _mins = 0;
+        _selectedDate = DateTime.now();
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(AppLocalizations.of(context).entrySaved),
-            backgroundColor: AppColors.success),
+            backgroundColor: AppColors.entryAccent),
       );
     }
   }
@@ -104,358 +127,546 @@ class _NewEntryPageState extends ConsumerState<NewEntryPage> {
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
-    final theme = Theme.of(context);
-    final timer = ref.watch(timerProvider);
     final formState = ref.watch(entryFormProvider);
     final session = ref.watch(authProvider).session;
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Form(
-        key: _formKey,
-        child: Column(children: [
-          // Customer photo
-          _PhotoRow(
-            photoBytes: formState.customerPhotoBytes,
-            label: l.customerPhoto,
-            onTap: () => _pickPhoto(true),
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.entryBgTop, AppColors.entryBgBottom],
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _customerCard(l, formState),
+              const SizedBox(height: 16),
+              _workCard(),
+              const SizedBox(height: 16),
+              _paymentCard(l),
+              const SizedBox(height: 16),
+              _detailsCard(l, session),
+              const SizedBox(height: 20),
+              if (formState.error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Text(formState.error!,
+                      style: const TextStyle(color: Color(0xFFFF6B6B))),
+                ),
+              SizedBox(
+                height: 66,
+                child: ElevatedButton.icon(
+                  onPressed: formState.isLoading ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.entryAccent,
+                    foregroundColor: AppColors.entryPillText,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    textStyle: const TextStyle(fontSize: 21, fontWeight: FontWeight.w900),
+                  ),
+                  icon: formState.isLoading
+                      ? const SizedBox(
+                          width: 20, height: 20,
+                          child: CircularProgressIndicator(
+                              color: AppColors.entryPillText, strokeWidth: 2))
+                      : const Icon(Icons.check_circle_rounded, size: 28),
+                  label: Text(formState.isLoading ? l.saving : l.saveEntry),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
+        ),
+      ),
+    );
+  }
 
-          // Timer card
-          _TimerCard(l: l, theme: theme, timer: timer),
-          const SizedBox(height: 16),
-
-          // Customer name
-          _field(
-            ctrl: _nameCtrl,
-            label: l.customerName,
-            hint: l.customerNameHint,
-            icon: Icons.person_outline,
-            onChanged: (v) {
-              ref.read(entryFormProvider.notifier)
-                  .checkCustomerName(v, session?.vehicleName ?? '');
-              setState(() {});
-            },
-            validator: (v) {
-              if (v == null || v.trim().isEmpty) return l.customerNameRequired;
-              if (v.trim().length < 3) return l.customerNameTooShort;
-              if (!formState.isNameUnique) return l.customerNameDuplicate;
-              return null;
-            },
-            suffix: formState.isCheckingName
-                ? const SizedBox(width: 16, height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2))
-                : formState.isNameUnique && _nameCtrl.text.isNotEmpty
-                    ? const Icon(Icons.check_circle, color: AppColors.success, size: 20)
-                    : null,
+  // ─── CUSTOMER card ──────────────────────────────────────────────────────
+  Widget _customerCard(AppLocalizations l, EntryFormState formState) {
+    return _card(children: [
+      _sectionHeader(Icons.person_rounded, 'CUSTOMER'),
+      Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
+        _PhotoPicker(photoBytes: formState.customerPhotoBytes, onTap: () => _pickPhoto(true)),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l.customerName,
+                  style: const TextStyle(
+                      fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted)),
+              const SizedBox(height: 3),
+              TextFormField(
+                controller: _nameCtrl,
+                style: const TextStyle(
+                    fontSize: 20, fontWeight: FontWeight.w900, color: AppColors.entryTextPrimary),
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: l.customerNameHint,
+                  hintStyle: TextStyle(
+                      color: AppColors.entryTextMuted.withOpacity(0.5),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 15),
+                  suffixIcon: formState.isCheckingName
+                      ? const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: SizedBox(
+                              width: 14, height: 14,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: AppColors.entryAccent)))
+                      : formState.isNameUnique && _nameCtrl.text.isNotEmpty
+                          ? const Icon(Icons.check_circle, color: AppColors.entryAccent, size: 18)
+                          : null,
+                ),
+                onChanged: (v) {
+                  ref.read(entryFormProvider.notifier)
+                      .checkCustomerName(v, ref.read(authProvider).session?.vehicleName ?? '');
+                  setState(() {});
+                },
+                validator: (v) {
+                  if (v == null || v.trim().isEmpty) return l.customerNameRequired;
+                  if (v.trim().length < 3) return l.customerNameTooShort;
+                  if (!formState.isNameUnique) return l.customerNameDuplicate;
+                  return null;
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-
-          // Native with suggestions
-          _NativeField(
+        ),
+      ]),
+      const SizedBox(height: 14),
+      Row(children: [
+        Expanded(
+          child: _NativeTile(
             ctrl: _nativeCtrl,
             l: l,
             suggestions: formState.nativeSuggestions,
             onChanged: (v) => ref.read(entryFormProvider.notifier).fetchNativeSuggestions(v),
           ),
-          const SizedBox(height: 12),
-
-          // Rate per hour
-          _field(
-            ctrl: _rateCtrl,
-            label: l.ratePerHour,
-            hint: l.ratePerHourHint,
-            icon: Icons.currency_rupee,
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            onChanged: (_) => setState(() {}),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _tileField(
+            icon: Icons.call_rounded,
+            label: l.customerPhone,
+            controller: _phoneCtrl,
+            hint: l.customerPhoneHint,
+            keyboardType: TextInputType.phone,
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(10),
+            ],
             validator: (v) {
-              if (v == null || v.trim().isEmpty) return l.rateRequired;
+              if (v != null && v.isNotEmpty && v.length != 10) {
+                return l.customerPhoneInvalid;
+              }
               return null;
             },
           ),
-          const SizedBox(height: 12),
+        ),
+      ]),
+    ]);
+  }
 
-          // Total + paid row
+  // ─── WORK card ──────────────────────────────────────────────────────────
+  Widget _workCard() {
+    return _card(children: [
+      _sectionHeader(Icons.schedule_rounded, 'WORK'),
+      const Text('RATE PER HOUR',
+          style: TextStyle(
+              fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted, letterSpacing: 0.5)),
+      const SizedBox(height: 8),
+      _StepperControl(
+        height: 48,
+        valueText: '₹${_fmt(_rate)}',
+        valueFontSize: 25,
+        onDec: _decRate,
+        onInc: _incRate,
+      ),
+      const SizedBox(height: 14),
+      Row(children: [
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('HOURS',
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted, letterSpacing: 1)),
+            const SizedBox(height: 6),
+            _StepperControl(height: 40, valueText: '$_hrs', valueFontSize: 22, onDec: _decHrs, onInc: _incHrs),
+          ]),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            const Text('MINUTES',
+                style: TextStyle(
+                    fontSize: 12, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted, letterSpacing: 1)),
+            const SizedBox(height: 6),
+            _StepperControl(
+              height: 40,
+              valueText: _mins.toString().padLeft(2, '0'),
+              valueFontSize: 22,
+              onDec: _decMins,
+              onInc: _incMins,
+            ),
+          ]),
+        ),
+      ]),
+      const SizedBox(height: 14),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(color: AppColors.entryPillGreen, borderRadius: BorderRadius.circular(15)),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Row(children: [
-            Expanded(child: _readonlyField(
-              label: l.totalAmount,
-              value: _currency.format(_totalAmount),
-              color: AppColors.primary,
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: _field(
-              ctrl: _paidCtrl,
-              label: l.paidAmount,
-              hint: l.paidAmountHint,
-              icon: Icons.payment_outlined,
+            const Icon(Icons.calculate_rounded, size: 22, color: AppColors.entryPillText),
+            const SizedBox(width: 8),
+            const Text('Total',
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.entryPillText)),
+            const SizedBox(width: 6),
+            _autoBadge(),
+          ]),
+          Text('₹ ${_fmt(_totalAmount)}',
+              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.entryPillText)),
+        ]),
+      ),
+    ]);
+  }
+
+  // ─── PAYMENT card ───────────────────────────────────────────────────────
+  Widget _paymentCard(AppLocalizations l) {
+    return _card(children: [
+      _sectionHeader(Icons.payments_rounded, 'PAYMENT'),
+      const Text('AMOUNT PAID (tap to type)',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted)),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+        decoration:
+            BoxDecoration(color: AppColors.entryPillGreenLight, borderRadius: BorderRadius.circular(15)),
+        child: Row(children: [
+          Expanded(
+            child: TextFormField(
+              controller: _paidCtrl,
               keyboardType: TextInputType.number,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               onChanged: (_) => setState(() {}),
-            )),
-          ]),
-          const SizedBox(height: 12),
-
-          // Balance
-          _readonlyField(
-            label: l.balanceAmount,
-            value: _currency.format(_balance),
-            color: _balance > 0 ? AppColors.error : AppColors.success,
-            bgColor: _balance > 0 ? AppColors.errorSurface : AppColors.successSurface,
-          ),
-          const SizedBox(height: 12),
-
-          // Date + phone row
-          Row(children: [
-            Expanded(child: InkWell(
-              onTap: _pickDate,
-              borderRadius: BorderRadius.circular(12),
-              child: InputDecorator(
-                decoration: InputDecoration(
-                  labelText: l.date,
-                  prefixIcon: const Icon(Icons.calendar_today_outlined),
-                ),
-                child: Text(
-                  '${_selectedDate.day.toString().padLeft(2, '0')}/'
-                  '${_selectedDate.month.toString().padLeft(2, '0')}/'
-                  '${_selectedDate.year}',
-                  style: theme.textTheme.bodyMedium,
-                ),
+              style: const TextStyle(
+                  fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.entryPillText),
+              decoration: InputDecoration(
+                isDense: true,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.zero,
+                prefixText: '₹ ',
+                prefixStyle: const TextStyle(
+                    fontSize: 28, fontWeight: FontWeight.w900, color: AppColors.entryPillText),
+                hintText: '0',
+                hintStyle: TextStyle(
+                    fontSize: 28, fontWeight: FontWeight.w900,
+                    color: AppColors.entryPillText.withOpacity(0.4)),
               ),
-            )),
-            const SizedBox(width: 12),
-            Expanded(child: _field(
-              ctrl: _phoneCtrl,
-              label: l.customerPhone,
-              hint: l.customerPhoneHint,
-              icon: Icons.phone_outlined,
-              keyboardType: TextInputType.phone,
-              inputFormatters: [
-                FilteringTextInputFormatter.digitsOnly,
-                LengthLimitingTextInputFormatter(10),
-              ],
-              validator: (v) {
-                if (v != null && v.isNotEmpty && v.length != 10) {
-                  return l.customerPhoneInvalid;
-                }
-                return null;
-              },
-            )),
-          ]),
-          const SizedBox(height: 12),
-
-          // Vehicle name (locked)
-          InputDecorator(
-            decoration: InputDecoration(
-              labelText: l.vehicleNameField,
-              helperText: l.vehicleNameLocked,
-              prefixIcon: const Icon(Icons.directions_car_outlined),
-              fillColor: AppColors.grey100,
             ),
-            child: Text(session?.vehicleName ?? '—',
-                style: theme.textTheme.bodyMedium
-                    ?.copyWith(color: AppColors.grey500)),
           ),
-          const SizedBox(height: 12),
-
-          // Bill photo
-          _BillPhotoRow(
-            photoBytes: formState.billPhotoBytes,
-            label: l.billPhoto,
-            onTap: () => _pickPhoto(false),
-          ),
-          const SizedBox(height: 24),
-
-          if (formState.error != null)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Text(formState.error!,
-                  style: const TextStyle(color: AppColors.error)),
-            ),
-
-          ElevatedButton.icon(
-            onPressed: formState.isLoading ? null : _save,
-            icon: formState.isLoading
-                ? const SizedBox(width: 18, height: 18,
-                    child: CircularProgressIndicator(color: AppColors.white, strokeWidth: 2))
-                : const Icon(Icons.save_outlined),
-            label: Text(formState.isLoading ? l.saving : l.saveEntry),
-          ),
-          const SizedBox(height: 32),
+          Icon(Icons.dialpad_rounded, size: 26, color: AppColors.entryPillText.withOpacity(0.55)),
         ]),
       ),
+      const SizedBox(height: 12),
+      Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppColors.entryAccentSurface,
+          border: Border.all(color: AppColors.entryAccentBorderSoft),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          Row(children: [
+            const Icon(Icons.account_balance_wallet_rounded, size: 22, color: AppColors.entryAccent),
+            const SizedBox(width: 8),
+            Text(l.balanceAmount.replaceAll(' (₹)', ''),
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w900, color: AppColors.entryTextSecondary)),
+            const SizedBox(width: 6),
+            _autoBadge(dark: true),
+          ]),
+          Text('₹ ${_fmt(_balance)}',
+              style: const TextStyle(
+                  fontSize: 24, fontWeight: FontWeight.w900, color: AppColors.entryTextPrimary)),
+        ]),
+      ),
+    ]);
+  }
+
+  // ─── DETAILS card ───────────────────────────────────────────────────────
+  Widget _detailsCard(AppLocalizations l, dynamic session) {
+    final dateStr = '${_selectedDate.day.toString().padLeft(2, '0')}/'
+        '${_selectedDate.month.toString().padLeft(2, '0')}/'
+        '${_selectedDate.year}';
+    return _card(children: [
+      _sectionHeader(Icons.description_rounded, 'DETAILS'),
+      Row(children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: _pickDate,
+            child: _staticTile(icon: Icons.calendar_month_rounded, label: l.date, value: dateStr),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: _staticTile(
+            icon: Icons.directions_car_rounded,
+            label: l.vehicleNameField,
+            value: session?.vehicleName ?? '—',
+            iconColor: AppColors.entryTextMuted2,
+            valueColor: AppColors.entryTextSecondary,
+          ),
+        ),
+      ]),
+      const SizedBox(height: 12),
+      GestureDetector(
+        onTap: () => _pickPhoto(false),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppColors.entryAccentDashed,
+            border: Border.all(color: AppColors.entryAccentBorderSoft),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(children: [
+            const Icon(Icons.receipt_long_rounded, size: 26, color: AppColors.entryAccent),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l.billPhoto,
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.w800, color: AppColors.entryTextPrimary),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                  color: AppColors.entryAccentSurface, borderRadius: BorderRadius.circular(999)),
+              child: Text(l.attachBill.replaceAll(' Bill', ''),
+                  style: const TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.entryAccent)),
+            ),
+          ]),
+        ),
+      ),
+    ]);
+  }
+
+  // ─── shared building blocks ────────────────────────────────────────────
+  Widget _card({required List<Widget> children}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.entryCardBg,
+        border: Border.all(color: AppColors.entryCardBorder),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: children),
     );
   }
 
-  Widget _field({
-    required TextEditingController ctrl,
+  Widget _sectionHeader(IconData icon, String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Row(children: [
+        Icon(icon, size: 20, color: AppColors.entryAccent),
+        const SizedBox(width: 8),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 1.5, color: AppColors.entryAccent)),
+      ]),
+    );
+  }
+
+  Widget _autoBadge({bool dark = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: dark ? AppColors.entryAccentSurface : AppColors.entryPillText.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text('AUTO',
+          style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+              color: dark ? AppColors.entryAccentDark : AppColors.entryPillText)),
+    );
+  }
+
+  Widget _tileField({
+    required IconData icon,
     required String label,
+    required TextEditingController controller,
     String? hint,
-    IconData? icon,
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
     void Function(String)? onChanged,
-    Widget? suffix,
   }) {
-    return TextFormField(
-      controller: ctrl,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        prefixIcon: icon != null ? Icon(icon) : null,
-        suffixIcon: suffix,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      decoration: BoxDecoration(color: AppColors.entryTileBg, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(children: [
+            Icon(icon, size: 17, color: AppColors.entryAccent),
+            const SizedBox(width: 6),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted)),
+          ]),
+          const SizedBox(height: 3),
+          TextFormField(
+            controller: controller,
+            keyboardType: keyboardType,
+            inputFormatters: inputFormatters,
+            validator: validator,
+            onChanged: onChanged,
+            style: const TextStyle(
+                fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.entryTextPrimary),
+            decoration: InputDecoration(
+              isDense: true,
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              contentPadding: EdgeInsets.zero,
+              hintText: hint,
+              hintStyle: TextStyle(
+                  color: AppColors.entryTextMuted.withOpacity(0.5),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14),
+            ),
+          ),
+        ],
       ),
-      keyboardType: keyboardType,
-      inputFormatters: inputFormatters,
-      validator: validator,
-      onChanged: onChanged,
     );
   }
 
-  Widget _readonlyField({
+  Widget _staticTile({
+    required IconData icon,
     required String label,
     required String value,
-    Color? color,
-    Color? bgColor,
+    Color iconColor = AppColors.entryAccent,
+    Color valueColor = AppColors.entryTextPrimary,
   }) {
-    return InputDecorator(
-      decoration: InputDecoration(
-        labelText: label,
-        fillColor: bgColor ?? AppColors.grey100,
-        filled: true,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
-        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
-      ),
-      child: Text(value,
-          style: TextStyle(
-              fontWeight: FontWeight.w600,
-              color: color ?? AppColors.grey700,
-              fontSize: 15)),
-    );
-  }
-}
-
-// ─── Timer card ──────────────────────────────────────────────────────────────
-class _TimerCard extends ConsumerWidget {
-  final AppLocalizations l;
-  final ThemeData theme;
-  final TimerState timer;
-  const _TimerCard({required this.l, required this.theme, required this.timer});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final isRunning = timer.status == TimerStatus.running;
-    final isPaused = timer.status == TimerStatus.paused;
-    final isStopped = timer.status == TimerStatus.stopped;
-
-    return Card(
-      color: AppColors.primarySurface,
-      shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: AppColors.primaryLight, width: 0.5)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(children: [
-          // Display
-          Text(timer.display,
-              style: const TextStyle(
-                  fontSize: 42, fontWeight: FontWeight.w700,
-                  color: AppColors.primaryDark, letterSpacing: 4,
-                  fontFamily: 'monospace')),
-          const SizedBox(height: 4),
-          Text(
-            isStopped ? l.timerStopped
-                : isPaused ? l.timerPaused
-                : isRunning ? l.timerRunning
-                : l.hoursWorked,
-            style: theme.textTheme.bodySmall?.copyWith(color: AppColors.primary),
-          ),
-          const SizedBox(height: 12),
-          // Buttons
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            _TimerBtn(
-              label: l.timerStart,
-              icon: Icons.play_arrow,
-              color: AppColors.primary,
-              enabled: !isRunning,
-              onTap: () {
-                final ctrl = context.findAncestorStateOfType<_NewEntryPageState>();
-                final name = ctrl?._nameCtrl.text ?? '';
-                if (name.trim().isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Enter customer name first')));
-                  return;
-                }
-                ref.read(timerProvider.notifier).start(name);
-              },
-            ),
-            const SizedBox(width: 10),
-            _TimerBtn(
-              label: l.timerPause,
-              icon: Icons.pause,
-              color: AppColors.secondary,
-              enabled: isRunning,
-              onTap: () => ref.read(timerProvider.notifier).pause(),
-            ),
-            const SizedBox(width: 10),
-            _TimerBtn(
-              label: l.timerStop,
-              icon: Icons.stop,
-              color: AppColors.error,
-              enabled: isRunning || isPaused,
-              onTap: () => ref.read(timerProvider.notifier).stop(),
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+      decoration: BoxDecoration(color: AppColors.entryTileBg, borderRadius: BorderRadius.circular(14)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(children: [
+            Icon(icon, size: 17, color: iconColor),
+            const SizedBox(width: 6),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted)),
           ]),
-        ]),
+          const SizedBox(height: 3),
+          Text(value, style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: valueColor)),
+        ],
       ),
     );
   }
 }
 
-class _TimerBtn extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final Color color;
-  final bool enabled;
-  final VoidCallback onTap;
-  const _TimerBtn({required this.label, required this.icon, required this.color,
-      required this.enabled, required this.onTap});
+// ─── Stepper control (used for Rate / Hours / Minutes) ─────────────────────
+class _StepperControl extends StatelessWidget {
+  final double height;
+  final String valueText;
+  final double valueFontSize;
+  final VoidCallback onDec;
+  final VoidCallback onInc;
+
+  const _StepperControl({
+    required this.height,
+    required this.valueText,
+    required this.valueFontSize,
+    required this.onDec,
+    required this.onInc,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton.icon(
-      onPressed: enabled ? onTap : null,
-      icon: Icon(icon, size: 18),
-      label: Text(label, style: const TextStyle(fontSize: 12)),
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: AppColors.white,
-        minimumSize: const Size(90, 40),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    return Container(
+      padding: EdgeInsets.all(height >= 48 ? 7 : 6),
+      decoration: BoxDecoration(color: AppColors.entryTileBg, borderRadius: BorderRadius.circular(height >= 48 ? 15 : 13)),
+      child: Row(children: [
+        _StepBtn(icon: Icons.remove_rounded, size: height, onTap: onDec),
+        Expanded(
+          child: Center(
+            child: Text(valueText,
+                style: TextStyle(
+                    fontSize: valueFontSize, fontWeight: FontWeight.w900, color: AppColors.entryTextPrimary)),
+          ),
+        ),
+        _StepBtn(icon: Icons.add_rounded, size: height, onTap: onInc),
+      ]),
+    );
+  }
+}
+
+class _StepBtn extends StatelessWidget {
+  final IconData icon;
+  final double size;
+  final VoidCallback onTap;
+  const _StepBtn({required this.icon, required this.size, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = size * 0.27;
+    return SizedBox(
+      width: size,
+      height: size,
+      child: Material(
+        color: AppColors.entryAccentSurface,
+        borderRadius: BorderRadius.circular(radius),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(radius),
+          onTap: onTap,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(radius),
+              border: Border.all(color: AppColors.entryAccentBorder, width: 2),
+            ),
+            child: Icon(icon, color: AppColors.entryAccent, size: size * 0.5),
+          ),
+        ),
       ),
     );
   }
 }
 
-// ─── Native field with suggestions ───────────────────────────────────────────
-class _NativeField extends StatefulWidget {
+// ─── Native place tile with suggestions ─────────────────────────────────────
+class _NativeTile extends StatefulWidget {
   final TextEditingController ctrl;
   final AppLocalizations l;
   final List<String> suggestions;
   final void Function(String) onChanged;
-  const _NativeField({required this.ctrl, required this.l,
-      required this.suggestions, required this.onChanged});
+  const _NativeTile({required this.ctrl, required this.l, required this.suggestions, required this.onChanged});
 
   @override
-  State<_NativeField> createState() => _NativeFieldState();
+  State<_NativeTile> createState() => _NativeTileState();
 }
 
-class _NativeFieldState extends State<_NativeField> {
+class _NativeTileState extends State<_NativeTile> {
   bool _showSuggestions = false;
 
   @override
@@ -463,42 +674,76 @@ class _NativeFieldState extends State<_NativeField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        TextFormField(
-          controller: widget.ctrl,
-          decoration: InputDecoration(
-            labelText: widget.l.nativePlace,
-            hintText: widget.l.nativePlaceHint,
-            prefixIcon: const Icon(Icons.location_on_outlined),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 11),
+          decoration: BoxDecoration(color: AppColors.entryTileBg, borderRadius: BorderRadius.circular(14)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(children: [
+                const Icon(Icons.location_on_rounded, size: 17, color: AppColors.entryAccent),
+                const SizedBox(width: 6),
+                Text(widget.l.nativePlace,
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.entryTextMuted)),
+              ]),
+              const SizedBox(height: 3),
+              TextFormField(
+                controller: widget.ctrl,
+                style: const TextStyle(
+                    fontSize: 17, fontWeight: FontWeight.w800, color: AppColors.entryTextPrimary),
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  contentPadding: EdgeInsets.zero,
+                  hintText: widget.l.nativePlaceHint,
+                  hintStyle: TextStyle(
+                      color: AppColors.entryTextMuted.withOpacity(0.5),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14),
+                ),
+                onChanged: (v) {
+                  widget.onChanged(v);
+                  setState(() => _showSuggestions = v.isNotEmpty);
+                },
+                onTap: () => setState(() => _showSuggestions = widget.ctrl.text.isNotEmpty),
+              ),
+            ],
           ),
-          onChanged: (v) {
-            widget.onChanged(v);
-            setState(() => _showSuggestions = v.isNotEmpty);
-          },
-          onTap: () => setState(
-              () => _showSuggestions = widget.ctrl.text.isNotEmpty),
         ),
         if (_showSuggestions && widget.suggestions.isNotEmpty)
-          Card(
+          Container(
             margin: const EdgeInsets.only(top: 4),
+            decoration: BoxDecoration(
+              color: AppColors.entryTileBg,
+              border: Border.all(color: AppColors.entryCardBorder),
+              borderRadius: BorderRadius.circular(12),
+            ),
             child: Column(
-              children: widget.suggestions.map((s) => ListTile(
-                dense: true,
-                leading: const Icon(Icons.history, size: 18, color: AppColors.grey500),
-                title: Text(s, style: const TextStyle(fontSize: 14)),
-                trailing: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: AppColors.secondarySurface,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Text(widget.l.existingSuggestion,
-                      style: const TextStyle(fontSize: 10, color: AppColors.secondaryDark)),
-                ),
-                onTap: () {
-                  widget.ctrl.text = s;
-                  setState(() => _showSuggestions = false);
-                },
-              )).toList(),
+              mainAxisSize: MainAxisSize.min,
+              children: widget.suggestions
+                  .map((s) => InkWell(
+                        onTap: () {
+                          widget.ctrl.text = s;
+                          setState(() => _showSuggestions = false);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          child: Row(children: [
+                            const Icon(Icons.history, size: 15, color: AppColors.entryTextMuted2),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(s,
+                                  style: const TextStyle(
+                                      fontSize: 13, color: AppColors.entryTextPrimary)),
+                            ),
+                          ]),
+                        ),
+                      ))
+                  .toList(),
             ),
           ),
       ],
@@ -506,91 +751,31 @@ class _NativeFieldState extends State<_NativeField> {
   }
 }
 
-// ─── Photo rows ───────────────────────────────────────────────────────────────
-class _PhotoRow extends StatelessWidget {
+// ─── Customer photo picker ───────────────────────────────────────────────────
+class _PhotoPicker extends StatelessWidget {
   final Uint8List? photoBytes;
-  final String label;
   final VoidCallback onTap;
-  const _PhotoRow({required this.photoBytes, required this.label, required this.onTap});
+  const _PhotoPicker({required this.photoBytes, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Row(children: [
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 64, height: 64,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: AppColors.grey100,
-            border: Border.all(color: AppColors.grey200),
-            // MemoryImage works on Android, iOS and Web; FileImage does not
-            // exist on Web since dart:io is unavailable there.
-            image: photoBytes != null
-                ? DecorationImage(image: MemoryImage(photoBytes!), fit: BoxFit.cover)
-                : null,
-          ),
-          child: photoBytes == null
-              ? const Icon(Icons.add_a_photo_outlined, color: AppColors.grey500)
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          color: AppColors.entryAccentSurfaceSoft,
+          border: Border.all(color: AppColors.entryAccentBorderSoft, width: 1.4),
+          image: photoBytes != null
+              ? DecorationImage(image: MemoryImage(photoBytes!), fit: BoxFit.cover)
               : null,
         ),
+        child: photoBytes == null
+            ? const Icon(Icons.photo_camera_rounded, color: AppColors.entryAccent, size: 26)
+            : null,
       ),
-      const SizedBox(width: 16),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 4),
-        OutlinedButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.camera_alt_outlined, size: 16),
-          label: const Text('Camera', style: TextStyle(fontSize: 12)),
-          style: OutlinedButton.styleFrom(
-            minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          ),
-        ),
-      ]),
-    ]);
-  }
-}
-
-class _BillPhotoRow extends StatelessWidget {
-  final Uint8List? photoBytes;
-  final String label;
-  final VoidCallback onTap;
-  const _BillPhotoRow({required this.photoBytes, required this.label, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(children: [
-      GestureDetector(
-        onTap: onTap,
-        child: Container(
-          width: 80, height: 60,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            color: AppColors.grey100,
-            border: Border.all(color: AppColors.grey200, style: BorderStyle.solid),
-            image: photoBytes != null
-                ? DecorationImage(image: MemoryImage(photoBytes!), fit: BoxFit.cover)
-                : null,
-          ),
-          child: photoBytes == null
-              ? const Icon(Icons.receipt_long_outlined, color: AppColors.grey500)
-              : null,
-        ),
-      ),
-      const SizedBox(width: 16),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(label, style: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14)),
-        const SizedBox(height: 4),
-        OutlinedButton.icon(
-          onPressed: onTap,
-          icon: const Icon(Icons.camera_alt_outlined, size: 16),
-          label: const Text('Attach bill', style: TextStyle(fontSize: 12)),
-          style: OutlinedButton.styleFrom(
-            minimumSize: Size.zero, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          ),
-        ),
-      ]),
-    ]);
+    );
   }
 }
