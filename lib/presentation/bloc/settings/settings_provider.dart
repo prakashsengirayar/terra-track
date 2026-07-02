@@ -33,7 +33,7 @@ class AppSettings {
   const AppSettings({
     this.locale = const Locale('en'),
     this.appFontSize = AppFontSize.medium,
-    this.themeMode = ThemeMode.system,
+    this.themeMode = ThemeMode.dark,
   });
 
   double get fontSize => appFontSize.scale;
@@ -61,7 +61,7 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   void _load() {
     final localeCode = _box.get(AppConstants.localeKey, defaultValue: 'en') as String;
     final fontKey = _box.get(AppConstants.fontSizeKey, defaultValue: 'medium') as String;
-    final themeKey = _box.get(AppConstants.themeModeKey, defaultValue: 'system') as String;
+    final themeKey = _box.get(AppConstants.themeModeKey, defaultValue: 'dark') as String;
 
     state = AppSettings(
       locale: Locale(localeCode),
@@ -76,8 +76,8 @@ class SettingsNotifier extends StateNotifier<AppSettings> {
   ThemeMode _parseTheme(String key) {
     switch (key) {
       case 'light': return ThemeMode.light;
-      case 'dark': return ThemeMode.dark;
-      default: return ThemeMode.system;
+      case 'system': return ThemeMode.system;
+      default: return ThemeMode.dark;
     }
   }
 

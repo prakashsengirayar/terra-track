@@ -81,6 +81,41 @@ class AppColors {
   static const Color entryPillGreen = Color(0xFFA9DCBB);
   static const Color entryPillGreenLight = Color(0xFFBFE8CB);
   static const Color entryPillText = Color(0xFF08120C);
+  static const Color entryTextMutedDeep = Color(0xFF5F8F76);
+
+  // Amber ("to collect" / balance-due) tokens, from the Dashboard design.
+  static const Color entryAmber = Color(0xFFE0A458);
+  static const Color entryAmberDeep = Color(0xFFD1913F);
+  static const Color entryAmberDarkText = Color(0xFF241703);
+  static const Color entryAmberDeepText = Color(0xFF3D2A0E);
+  static const Color entryAmberSoftText = Color(0xFFF0C48A);
+  static const Color entryAmberTintBg = Color(0x29E0A458); // rgba(224,164,88,.16)
+  static const Color entryAmberTintBgSoft = Color(0x24E0A458); // rgba(224,164,88,.14)
+  static const Color entryAmberTintBorder = Color(0x4DE0A458); // rgba(224,164,88,.30)
+
+  // Logout (red) tokens.
+  static const Color entryRed = Color(0xFFE08A8A);
+  static const Color entryRedTintBg = Color(0x1AE08A8A); // rgba(224,138,138,.10)
+  static const Color entryRedTintBorder = Color(0x47E08A8A); // rgba(224,138,138,.28)
+
+  // Avatar palette, cycled per list row (index % 5).
+  static const List<Color> entryAvatarPalette = [
+    entryAccent, // #34D17E
+    entryAmber, // #E0A458
+    Color(0xFF5DB0E6),
+    Color(0xFFC98BDB),
+    entryRed, // #E08A8A
+  ];
+
+  // A couple more precise translucency steps used by the Dashboard/Edit
+  // screens (filter chip active state, editable-tile fill, outlined button
+  // border) that don't line up with the tokens above.
+  static const Color entryAccentTintStrong = Color(0x2934D17E); // rgba(52,209,126,.16)
+  static const Color entryWhite04 = Color(0x0AFFFFFF); // rgba(255,255,255,.04)
+  static const Color entryWhite06 = Color(0x0FFFFFFF); // rgba(255,255,255,.06)
+  static const Color entryWhite10 = Color(0x1AFFFFFF); // rgba(255,255,255,.10)
+  static const Color entryWhite12 = Color(0x1FFFFFFF); // rgba(255,255,255,.12)
+  static const Color entryIconMuted = Color(0xFF9FBCAE); // Settings screen icon tone
 }
 
 class AppTheme {

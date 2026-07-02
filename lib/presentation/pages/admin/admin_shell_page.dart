@@ -5,6 +5,7 @@ import 'package:responsive_framework/responsive_framework.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../bloc/admin/admin_auth_provider.dart';
 
 class AdminShellPage extends ConsumerStatefulWidget {
   final Widget child;
@@ -21,6 +22,27 @@ class _AdminShellPageState extends ConsumerState<AdminShellPage> {
   void _navigate(int index) {
     setState(() => _selectedIndex = index);
     context.go(_routes[index]);
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Logout'),
+        content: const Text('Are you sure you want to log out of the admin portal?'),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel')),
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Logout')),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    await ref.read(adminAuthProvider.notifier).logout();
+    if (mounted) context.go('/admin/login');
   }
 
   @override
@@ -69,6 +91,20 @@ class _AdminShellPageState extends ConsumerState<AdminShellPage> {
               selectedIcon: Icon(item.$2),
               label: Text(item.$3),
             )).toList(),
+            trailing: Expanded(
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: IconButton(
+                    icon: const Icon(Icons.logout),
+                    color: AppColors.primaryLighter,
+                    tooltip: 'Logout',
+                    onPressed: _logout,
+                  ),
+                ),
+              ),
+            ),
           ),
           const VerticalDivider(thickness: 0, width: 0),
           Expanded(child: widget.child),
@@ -90,12 +126,26 @@ class _AdminShellPageState extends ConsumerState<AdminShellPage> {
             tooltip: 'Back to client',
             onPressed: () => context.go('/client'),
           ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Logout',
+            onPressed: _logout,
+          ),
         ],
       ),
       body: widget.child,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _navigate,
+        // Explicit here (rather than relying on the theme) so this bar
+        // stays a fixed 4-item strip with visible labels regardless of
+        // light/dark theme — with >3 items Flutter otherwise defaults to
+        // BottomNavigationBarType.shifting, which hides unselected labels
+        // and can make the menu look like it isn't rendering on mobile.
+        type: BottomNavigationBarType.fixed,
+        backgroundColor: AppColors.white,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.grey500,
         items: navItems.map((item) => BottomNavigationBarItem(
           icon: Icon(item.$1),
           activeIcon: Icon(item.$2),

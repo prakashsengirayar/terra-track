@@ -4,11 +4,12 @@ import 'package:go_router/go_router.dart';
 
 import '../../presentation/bloc/auth/auth_provider.dart';
 import '../../presentation/bloc/agri/agri_auth_provider.dart';
+import '../../presentation/bloc/admin/admin_auth_provider.dart';
 import '../../presentation/pages/auth/login_page.dart';
-import '../../presentation/pages/client/main_tab_page.dart';
 import '../../presentation/pages/client/work_logs_page.dart';
 import '../../presentation/pages/client/new_entry_page.dart';
 import '../../presentation/pages/client/entry_detail_page.dart';
+import '../../presentation/pages/admin/admin_login_page.dart';
 import '../../presentation/pages/admin/admin_shell_page.dart';
 import '../../presentation/pages/admin/dashboard_page.dart';
 import '../../presentation/pages/admin/add_entry_page.dart';
@@ -26,9 +27,11 @@ import '../../presentation/pages/agri/vehicles_page.dart';
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authProvider.notifier);
   final agriAuthNotifier = ref.watch(agriAuthProvider.notifier);
+  final adminAuthNotifier = ref.watch(adminAuthProvider.notifier);
   final listenable = Listenable.merge([
     _AuthListenable(authNotifier),
     _AgriAuthListenable(agriAuthNotifier),
+    _AdminAuthListenable(adminAuthNotifier),
   ]);
 
   return GoRouter(
@@ -55,12 +58,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // --- Admin branch ---
-      // The admin area has no auth gate of its own (see admin_shell_page.dart /
-      // admin_provider.dart — there is no admin-specific login/session). It is
-      // reached directly from the "Admin Panel →" link on the unauthenticated
-      // login screen, so it must never be subject to the vehicle/driver
-      // session check below: bypass that check entirely for /admin/*.
+      // Gated by its own fixed admin/admin credential (adminAuthProvider),
+      // fully independent from the vehicle-session auth below — bypass that
+      // check entirely for /admin/*.
       if (loc.startsWith('/admin')) {
+        final adminAuth = ref.read(adminAuthProvider);
+        if (adminAuth.status == AdminAuthStatus.loading) {
+          return null;
+        }
+        if (!adminAuth.isAuthenticated) {
+          return loc == '/admin/login' ? null : '/admin/login';
+        }
+        // authenticated
+        if (loc == '/admin/login') return '/admin';
         return null;
       }
 
@@ -81,6 +91,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/splash', builder: (_, __) => const SplashPage()),
       GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
       GoRoute(path: '/agri/login', builder: (_, __) => const AgriLoginPage()),
+      GoRoute(path: '/admin/login', builder: (_, __) => const AdminLoginPage()),
       ShellRoute(
         builder: (_, __, child) => AgriShellPage(child: child),
         routes: [
@@ -106,27 +117,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
-      ShellRoute(
-        builder: (_, __, child) => MainTabPage(child: child),
-        routes: [
-          GoRoute(
-            path: '/client',
-            builder: (_, __) => const WorkLogsPage(),
-          ),
-          GoRoute(
-            path: '/client/new-entry',
-            builder: (_, __) => const NewEntryPage(),
-          ),
-          GoRoute(
-            path: '/client/entry/:id',
-            builder: (_, state) =>
-                EntryDetailPage(entryId: state.pathParameters['id']!),
-          ),
-          GoRoute(
-            path: '/client/settings',
-            builder: (_, __) => const SettingsPage(),
-          ),
-        ],
+      // The client area is no longer a tab shell: Work Logs is the home
+      // screen (with its own header + action dock), and New Entry / Edit /
+      // Settings are pushed on top with a real back stack, matching the
+      // Dashboard design's screen-enter animation (fade + slide from the
+      // right, 280ms).
+      GoRoute(path: '/client', builder: (_, __) => const WorkLogsPage()),
+      GoRoute(
+        path: '/client/new-entry',
+        pageBuilder: (_, state) => _clientPage(state, const NewEntryPage()),
+      ),
+      GoRoute(
+        path: '/client/entry/:id',
+        pageBuilder: (_, state) => _clientPage(
+            state, EntryDetailPage(entryId: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/client/entry/:id/edit',
+        pageBuilder: (_, state) => _clientPage(
+            state, NewEntryPage(entryId: state.pathParameters['id']!)),
+      ),
+      GoRoute(
+        path: '/client/settings',
+        pageBuilder: (_, state) => _clientPage(state, const SettingsPage()),
       ),
       ShellRoute(
         builder: (_, __, child) => AdminShellPage(child: child),
@@ -153,6 +166,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   );
 });
 
+/// Fade + slide-in-from-the-right page transition (280ms, ease) used for
+/// screens pushed from the client Dashboard, per the design's "screen-enter
+/// animation: fade + slide-in from +14px X over 280ms ease".
+CustomTransitionPage _clientPage(GoRouterState state, Widget child) {
+  return CustomTransitionPage(
+    key: state.pageKey,
+    child: child,
+    transitionDuration: const Duration(milliseconds: 280),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(parent: animation, curve: Curves.ease);
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero)
+              .animate(curved),
+          child: child,
+        ),
+      );
+    },
+  );
+}
+
 class _AuthListenable extends ChangeNotifier {
   _AuthListenable(AuthNotifier notifier) {
     notifier.addListener((_) => notifyListeners());
@@ -161,6 +196,12 @@ class _AuthListenable extends ChangeNotifier {
 
 class _AgriAuthListenable extends ChangeNotifier {
   _AgriAuthListenable(AgriAuthNotifier notifier) {
+    notifier.addListener((_) => notifyListeners());
+  }
+}
+
+class _AdminAuthListenable extends ChangeNotifier {
+  _AdminAuthListenable(AdminAuthNotifier notifier) {
     notifier.addListener((_) => notifyListeners());
   }
 }

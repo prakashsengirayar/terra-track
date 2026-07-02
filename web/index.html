@@ -4,6 +4,12 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <!-- Without this, mobile browsers lay the page out at a fake ~980px
+       desktop viewport and zoom it to fit, so Flutter's MediaQuery sees
+       that wide width instead of the phone's real width — that's what was
+       breaking the ResponsiveBreakpoints MOBILE/DESKTOP check (and with
+       it the admin portal's menus) on phones in portrait. -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="description" content="TerraTrack — Agricultural Land Work Management System">
 
   <meta name="apple-mobile-web-app-capable" content="yes">

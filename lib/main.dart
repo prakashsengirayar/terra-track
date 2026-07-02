@@ -23,6 +23,7 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox(AppConstants.settingsBox);
   await Hive.openBox(AppConstants.sessionBox);
+  await Hive.openBox(AppConstants.adminSessionBox);
 
   await NotificationService.instance.initialize();
 
