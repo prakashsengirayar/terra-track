@@ -4,6 +4,7 @@ class AppConstants {
   // Hive boxes
   static const String settingsBox = 'settings';
   static const String sessionBox = 'session';
+  static const String adminSessionBox = 'adminSession';
 
   // Hive keys
   static const String localeKey = 'locale';
